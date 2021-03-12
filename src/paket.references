@@ -1,0 +1,9 @@
+Microsoft.Extensions.PlatformAbstractions
+Saturn 
+Giraffe
+FSharp.Data
+RabbitMQ.Client
+
+group docker
+    hobbes.core
+    hobbes.web
