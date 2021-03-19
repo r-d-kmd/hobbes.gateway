@@ -22,6 +22,7 @@ let dataRouter =
     router {
         pipe_through verifiedPipe
         withArg <@ json @> 
+        //withBody <@ graphql @> 
     }
 
 let private appRouter = router {

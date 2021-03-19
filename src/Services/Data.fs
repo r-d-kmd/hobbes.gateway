@@ -10,6 +10,10 @@ module Data =
     let private cacheRevision confDoc = 
         sprintf "%s:%d" confDoc (System.DateTime.Now.Ticks) |> hash
 
+    //[<Post ("/json/", true)>]
+    //let graphql query = 
+    //  ()
+
     [<Get ("/json/%s")>]
     let json configuration =  
         debugf "Getting json for '%A'" configuration
