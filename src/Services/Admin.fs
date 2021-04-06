@@ -49,14 +49,15 @@ module Admin =
 
     [<Get ("/projects")>]
     let getProjects() =
+        let auth = HttpRequestHeaders.BasicAuth (env "AZURE_DEVOPS_PAT" null) ""
         try
             let res1 = Http.Request("https://dev.azure.com/kmddk/_apis/projects?api-version=2.0",
                                      httpMethod = "GET",
-                                     headers = [HttpRequestHeaders.BasicAuth (env "AZURE_TOKEN_KMDDK" null) ""]
+                                     headers = [auth]
                                     )
             let res2 = Http.Request("https://dev.azure.com/time-payroll-kmddk/_apis/projects?api-version=2.0",
                                      httpMethod = "GET",
-                                     headers = [HttpRequestHeaders.BasicAuth (env "AZURE_TOKEN_TIME_PAYROLL_KMDDK" null) ""]
+                                     headers = [auth]
                                    )
 
             let getNames resBody =
