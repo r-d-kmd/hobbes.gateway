@@ -29,20 +29,25 @@ module Admin =
 
     [<Put ("/transformation",true)>]
     let storeTransformations doc =
-        try
+        200, "ok"
+        (*try
             match Http.post (None |> Http.Transformation |> Http.Configurations) doc with
             Http.Success _ -> 200,sprintf """{"transformation":%s, "status" : "ok" }""" doc
-            | Http.Error(s,m) -> s,sprintf "message: %A, doc: %A" m doc
+            | Http.Error(s,m) -> 
+                  assert(s > 100 && s < 600)
+                  s,sprintf "message: %A, doc: %A" m doc
         with e -> 
             Log.excf e "Trying to store %s" doc
-            500,sprintf "internal server error"
+            500,sprintf "internal server error"*)
 
     [<Put ("/configuration",true)>]
     let storeConfigurations doc = 
         try
             match Http.post (None |> Http.Configuration |> Http.Configurations) doc with
             Http.Success _ -> 200,sprintf """{"configuration":%s, "status" : "ok" }""" doc
-            | Http.Error(s,m) -> s,m
+            | Http.Error(s,m) -> 
+                assert(s > 100 && s < 600)
+                s,m
         with e -> 
             Log.excf e "Trying to store %s" doc
             500,sprintf "internal server error"
