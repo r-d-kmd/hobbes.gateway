@@ -29,28 +29,34 @@ module Admin =
 
     [<Put ("/transformation",true)>]
     let storeTransformations doc =
-        200, "ok"
-        (*try
-            match Http.post (None |> Http.Transformation |> Http.Configurations) doc with
-            Http.Success _ -> 200,sprintf """{"transformation":%s, "status" : "ok" }""" doc
-            | Http.Error(s,m) -> 
-                  assert(s > 100 && s < 600)
-                  s,sprintf "message: %A, doc: %A" m doc
-        with e -> 
-            Log.excf e "Trying to store %s" doc
-            500,sprintf "internal server error"*)
+        let statusCode,msg = 
+            try
+                match Http.post (None |> Http.Transformation |> Http.Configurations) doc with
+                Http.Success _ -> 200,sprintf """{"transformation":%s, "status" : "ok" }""" doc
+                | Http.Error(s,m) -> 
+                      assert(s > 100 && s < 600)
+                      s,sprintf "message: %A, doc: %A" m doc
+            with e -> 
+                Log.excf e "Trying to store %s" doc
+                500,sprintf "internal server error"
+        
+        assert(if statusCode > 100 && statusCode < 600 then eprintfn "Something is off %d %s" statusCode msg; false else true)
+        statusCode,msg
 
     [<Put ("/configuration",true)>]
     let storeConfigurations doc = 
-        try
-            match Http.post (None |> Http.Configuration |> Http.Configurations) doc with
-            Http.Success _ -> 200,sprintf """{"configuration":%s, "status" : "ok" }""" doc
-            | Http.Error(s,m) -> 
-                assert(s > 100 && s < 600)
-                s,m
-        with e -> 
-            Log.excf e "Trying to store %s" doc
-            500,sprintf "internal server error"
+        let statusCode, msg =
+            try
+                match Http.post (None |> Http.Configuration |> Http.Configurations) doc with
+                Http.Success _ -> 200,sprintf """{"configuration":%s, "status" : "ok" }""" doc
+                | Http.Error(s,m) -> 
+                    assert(s > 100 && s < 600)
+                    s,m
+            with e -> 
+                Log.excf e "Trying to store %s" doc
+                500,sprintf "internal server error"
+        assert(if statusCode > 100 && statusCode < 600 then eprintfn "Something is off %d %s" statusCode msg; false else true)
+        statusCode,msg
 
     [<Get ("/projects")>]
     let getProjects() =
