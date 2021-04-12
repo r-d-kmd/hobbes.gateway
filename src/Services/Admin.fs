@@ -28,13 +28,14 @@ module Admin =
         ]
     }""">
 
-    
-    [<Put ("/configuration/%s",true)>]
-    let storeConfigurations (name: string, doc : string) = 
-        
+    type private ConfigPost = JsonProvider<"""{"name":"lkjlkj", "hb": "lkjlkjlkj"}""">
+
+    [<Put ("/configuration", true)>]
+    let storeConfigurations (doc : string) =
+        let doc = ConfigPost.Parse doc
         let config = 
             let blocks = 
-                let errors, blocks = BlockParser.parse doc
+                let errors, blocks = BlockParser.parse doc.Hb
                 if errors|> List.isEmpty |> not then
                     failwith (System.String.Join(",",errors))
                 else
@@ -94,10 +95,10 @@ module Admin =
                     ) |> Encode.list
 
                 Encode.object [
-                    "_id", Encode.string name
+                    "_id", Encode.string doc.Name
                     "sourceHash", Encode.string sourceHash
                     "source", sourceObj
-                    "transformation", Encode.string doc
+                    "transformation", Encode.string doc.Hb
                 ] |> Encode.toString 0
             
             sourceConfig
@@ -105,12 +106,12 @@ module Admin =
         let statusCode, msg =
             try
                 match Http.post (None |> Http.Configuration |> Http.Configurations) config with
-                Http.Success _ -> 200,sprintf """{"configuration":%s, "status" : "ok" }""" doc
+                Http.Success _ -> 200,sprintf """{"configuration":%s, "status" : "ok" }""" doc.Hb
                 | Http.Error(s,m) -> 
                     assert(s > 100 && s < 600)
                     s,m
             with e -> 
-                Log.excf e "Trying to store %s" doc
+                Log.excf e "Trying to store %s" doc.Hb
                 500,sprintf "internal server error"
         assert(if statusCode > 100 && statusCode < 600 then eprintfn "Something is off %d %s" statusCode msg; false else true)
         statusCode,msg

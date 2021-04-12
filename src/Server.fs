@@ -1,26 +1,35 @@
 open Saturn
 open Giraffe
+open Microsoft.AspNetCore.Http
+open FSharp.Control.Tasks.V2.ContextInsensitive
 open Hobbes.Web.Routing
 open Hobbes.Gateway.Services.Admin
 open Hobbes.Gateway.Services.Data
 open Hobbes.Gateway.Services.Root
 open Hobbes.Helpers
 
+open Hobbes.Web
+
 let private port = 
     env "port" "8085" |> int
-       
-let adminRouter = 
-   router {
-        pipe_through verifiedPipe
-        withArgAndBody <@ storeConfigurations @>
-        fetch <@getProjects@>
-    }
+let private watch = 
+        let w = System.Diagnostics.Stopwatch()
+        w.Start()
+        w   
+
 
 let dataRouter = 
     router {
         pipe_through verifiedPipe
         withArg <@ json @> 
         //withBody <@ graphql @> 
+    }
+
+let adminRouter = 
+   router {
+        pipe_through verifiedPipe
+        withBody <@ storeConfigurations @>
+        fetch <@ getProjects @>
     }
 
 let private appRouter = router {
