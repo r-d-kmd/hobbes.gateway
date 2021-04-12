@@ -6,7 +6,9 @@ open Hobbes.Web
 open Hobbes.Web.Routing
 open Hobbes.Helpers.Environment
 open FSharp.Data
-
+open Hobbes.FSharp.Compile
+open Hobbes.Parsing
+open Thoth.Json.Net
 
 [<RouteArea "/admin">]
 module Admin = 
@@ -26,28 +28,83 @@ module Admin =
         ]
     }""">
 
-
-    [<Put ("/transformation",true)>]
-    let storeTransformations doc =
-        let statusCode,msg = 
-            try
-                match Http.post (None |> Http.Transformation |> Http.Configurations) doc with
-                Http.Success _ -> 200,sprintf """{"transformation":%s, "status" : "ok" }""" doc
-                | Http.Error(s,m) -> 
-                      assert(s > 100 && s < 600)
-                      s,sprintf "message: %A, doc: %A" m doc
-            with e -> 
-                Log.excf e "Trying to store %s" doc
-                500,sprintf "internal server error"
+    
+    [<Put ("/configuration/%s",true)>]
+    let storeConfigurations (name: string, doc : string) = 
         
-        assert(if statusCode > 100 && statusCode < 600 then eprintfn "Something is off %d %s" statusCode msg; false else true)
-        statusCode,msg
+        let config = 
+            let blocks = 
+                let errors, blocks = BlockParser.parse doc
+                if errors|> List.isEmpty |> not then
+                    failwith (System.String.Join(",",errors))
+                else
+                    blocks
 
-    [<Put ("/configuration",true)>]
-    let storeConfigurations doc = 
+            let source,properties = 
+                blocks
+                |> List.map(function 
+                     AST.Block.Source(source,properties) -> Some(source,properties)
+                     | _ -> None
+                ) |> List.find(Option.isSome)
+                |> Option.get
+            let rec encodeValue = 
+                function
+                    AST.Value.Mapping o -> 
+                        Encode.object(o |> Map.toList |> List.map(fun (n,v) -> 
+                            let name = 
+                                match n with
+                                AST.Value.String s -> s
+                                | AST.Value.Boolean b -> string b
+                                | AST.Value.Decimal d -> string d
+                                | v -> failwithf "can't use %A as property name" v
+                            name,encodeValue v
+                        ))
+                    | AST.Value.Sequence values ->
+                        Encode.array (values |> List.map encodeValue |> Array.ofList)
+                    | AST.Value.String s -> Encode.string s
+                    | AST.Value.Boolean b -> Encode.bool b
+                    | AST.Value.Decimal d -> Encode.decimal d
+                    | AST.Value.Null -> Encode.nil
+
+            let sourceConfig = 
+                let sourceObj = 
+                    Encode.object 
+                        (("provider", Encode.string source)::(
+                             properties
+                             |> Map.toList 
+                             |> List.map(fun (n,v) ->
+                                n, encodeValue v
+                             )
+                        ))
+                let sourceHash = 
+                   sourceObj
+                   |> Encode.toString 0 
+                   |> hash 
+
+                let transformations = 
+                    blocks
+                    |> List.collect(function 
+                         AST.Block.Statements stmts -> 
+                             stmts
+                             |> List.map(fun s -> 
+                                 s.ToString()
+                                 |> Encode.string
+                             )
+                         | _ -> []
+                    ) |> Encode.list
+
+                Encode.object [
+                    "_id", Encode.string name
+                    "sourceHash", Encode.string sourceHash
+                    "source", sourceObj
+                    "transformation", Encode.string doc
+                ] |> Encode.toString 0
+            
+            sourceConfig
+
         let statusCode, msg =
             try
-                match Http.post (None |> Http.Configuration |> Http.Configurations) doc with
+                match Http.post (None |> Http.Configuration |> Http.Configurations) config with
                 Http.Success _ -> 200,sprintf """{"configuration":%s, "status" : "ok" }""" doc
                 | Http.Error(s,m) -> 
                     assert(s > 100 && s < 600)

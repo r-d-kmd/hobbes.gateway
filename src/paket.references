@@ -5,3 +5,4 @@ FSharp.Data
 RabbitMQ.Client
 hobbes.core
 hobbes.web
+Thoth.Json.Net

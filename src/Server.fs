@@ -12,9 +12,7 @@ let private port =
 let adminRouter = 
    router {
         pipe_through verifiedPipe
-
-        withBody <@ storeTransformations @>
-        withBody <@storeConfigurations@>
+        withArgAndBody <@ storeConfigurations @>
         fetch <@getProjects@>
     }
 
