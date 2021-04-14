@@ -114,6 +114,7 @@ module Admin =
                 Log.excf e "Trying to store %s" doc.Hb
                 500,sprintf "internal server error"
         assert(if statusCode > 100 && statusCode < 600 then eprintfn "Something is off %d %s" statusCode msg; false else true)
+        if statusCode = 0 then failwithf "Can't return 0 %s" msg
         statusCode,msg
 
     [<Get ("/projects")>]
