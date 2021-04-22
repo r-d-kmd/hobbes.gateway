@@ -68,6 +68,10 @@ module Admin =
                     | AST.Value.Null -> Encode.nil
 
             let sourceConfig = 
+                let properties = 
+                    match properties |> Map.tryFind "meta" with
+                    | None -> properties.Add("meta",Hobbes.Parsing.AST.Value.Mapping(Map.empty))
+                    | Some _ -> properties
                 let sourceObj = 
                     Encode.object 
                         (("provider", Encode.string source)::(

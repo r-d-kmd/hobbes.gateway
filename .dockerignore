@@ -24,5 +24,6 @@ hobbes.sln
 installatin.md
 paket.exe
 README.md
-bin/
-obj/
+**/bin/
+**/obj/
+.fake/
