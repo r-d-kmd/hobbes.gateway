@@ -33,7 +33,7 @@ module Data =
         debugf "Getting json for '%A'" configuration
         match Http.get (configuration |> Some |> Http.Configuration |> Http.Configurations) RawdataTypes.Config.Parse with
         Http.Success config -> 
-            match Http.get (config.Id |> Http.UniformDataService.Read |> Http.UniformData) Data.Parse with
+            match Http.get (config.Id |> Http.UniformDataService.Read |> Http.UniformData) id with
             Http.Success json ->
                 200, json
             | Http.Error(sc,m) ->
