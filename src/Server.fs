@@ -6,6 +6,7 @@ open Hobbes.Web.Routing
 open Hobbes.Gateway.Services.Admin
 open Hobbes.Gateway.Services.Data
 open Hobbes.Gateway.Services.Root
+open Hobbes.Gateway.Services.Derkins
 open Hobbes.Helpers
 
 open Hobbes.Web
@@ -32,6 +33,12 @@ let adminRouter =
         fetch <@ getProjects @>
     }
 
+let derkinsRouter = 
+   router {
+        pipe_through verifiedPipe
+        withBody <@ identifyPii @>
+    }
+
 let private appRouter = router {
     not_found_handler (setStatusCode 404 >=> text "Api 404")
     
@@ -40,6 +47,7 @@ let private appRouter = router {
     withBody <@ key @>
     forward "/admin" adminRouter
     forward "/data" dataRouter
+    forward "/derkins" derkinsRouter
 } 
 
 let private app = application {

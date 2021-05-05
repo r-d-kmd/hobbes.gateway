@@ -13,6 +13,7 @@
     <Compile Include="Services/Admin.fs" />
     <Compile Include="Services/Data.fs" />
     <Compile Include="Services/Root.fs" />
+    <Compile Include="Services/Derkins.fs" />
     <Compile Include="Server.fs" />
   </ItemGroup>
   <Import Condition="Exists('../../../.paket/Paket.targets')" Project="../../../.paket/Paket.targets" />
