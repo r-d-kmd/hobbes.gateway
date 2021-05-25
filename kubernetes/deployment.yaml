@@ -20,6 +20,4 @@ spec:
         image: gateway
         name: gateway
       restartPolicy: Always
-      imagePullSecrets:
-      - name: acr-secret
 status: {}
